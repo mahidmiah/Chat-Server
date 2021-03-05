@@ -88,6 +88,14 @@ public class ServerWorker extends Thread {
                     this.formattedUsername = (ColouredText.ANSI_CYAN + ColouredText.ANSI_BOLD + "[" + this.userName + " (" + this.uniqueID.toString() + ")]" + ColouredText.ANSI_RESET);
                     ServerMain.broadcastMessage(String.format(Messages.Message_24, this.formattedUsername));
                     this.LoggedIn = true;
+                    StringBuilder message = new StringBuilder();
+                    // The workers HashSet will be looped though, for each worker, the message string variable will be appended with the current worker in loops formatted username, IP, PORT and username.
+                    for (ServerWorker worker_ : ServerMain.workers){
+                        if (worker_.LoggedIn){
+                            message.append(String.format(Messages.Message_34, worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
+                        }
+                    }
+                    this.outputStream.write(message.toString().getBytes());
                     break;
                 }
                 else {
@@ -96,7 +104,7 @@ public class ServerWorker extends Thread {
             }
         }
         catch (IOException e){
-            // ERROR HANDLING: If the try block cannot run it means the user has disconnected/closed without logging.
+            // ERROR HANDLING: If the try block cannot run it means the user has disconnected/closed without logging in.
 
             // The try/catch block embedded within another try/catch block as the handleClientClose throws an IOException.
             try {
