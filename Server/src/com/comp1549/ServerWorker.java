@@ -92,7 +92,7 @@ public class ServerWorker extends Thread {
                     // The workers HashSet will be looped though, for each worker, the message string variable will be appended with the current worker in loops formatted username, IP, PORT and username.
                     for (ServerWorker worker_ : ServerMain.workers){
                         if (worker_.LoggedIn){
-                            message.append(String.format(Messages.Message_34, worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
+                            message.append(String.format(Messages.ClientInfo, worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
                         }
                     }
                     this.outputStream.write(message.toString().getBytes());
