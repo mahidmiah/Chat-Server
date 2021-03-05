@@ -6,7 +6,7 @@ public class HelpCommand {
 
     public static void run(){
         // This command simply outputs a message containing all help information to the user/console.
-        System.out.println(Messages.Message_13);
+        System.out.println(Messages.ServerCommands);
     }
 
 }

@@ -9,10 +9,10 @@ public class ListCommand {
     public static void run(){
         //This command outputs all current online users on the console.
 
-        System.out.println(Messages.Message_14);
+        System.out.println(Messages.CurrentClientsOnline);
         if (ServerMain.workers.isEmpty()){
             // if there are not users online it will inform the user/console that no one is online.
-            System.out.println(Messages.Message_15);
+            System.out.println(Messages.ZeroUsersOnline);
         }
         else {
             // If there are players online then the workers HashSet will be looped through and for each worker their formatted username will be displayed.

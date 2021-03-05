@@ -9,11 +9,11 @@ public class StopCommand {
 
     public static void run() throws IOException {
         ServerMain.serverOpen = false; // Sets server to closed so no messages will be handled and no more users/clients can join.
-        System.out.println(Messages.Message_9);
-        System.out.println(Messages.Message_10);
+        System.out.println(Messages.ClosingChatServer);
+        System.out.println(Messages.DisconnectingClients);
         ServerMain.handleDisconnectAll(); // Disconnects all users.
-        System.out.println(Messages.Message_11);
-        System.out.println(Messages.Message_12);
+        System.out.println(Messages.DisconnectedAllClients);
+        System.out.println(Messages.ServerShutdown);
         System.exit(0); // Exits program.
     }
 
