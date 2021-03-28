@@ -71,8 +71,8 @@ public class ChatClient {
 
     private static void readMessageLoop(){
         String line;
-        byte[] closedBytes1 = {27, 91, 48, 109, 67, 76, 79, 83, 69, 68};
-        byte[] closedBytes2 = {67, 76, 79, 83, 69, 68};
+        byte[] closedBytes1 = {27, 91, 48, 109, 67, 76, 79, 83, 69, 68}; //Bytes for string: CLOSED + ANSI_RESET
+        byte[] closedBytes2 = {67, 76, 79, 83, 69, 68}; // Bytes for string: CLOSED
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
