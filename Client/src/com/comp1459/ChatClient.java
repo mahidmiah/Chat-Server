@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class ChatClient {
 
@@ -13,16 +14,27 @@ public class ChatClient {
     private static BufferedReader ServerBufferedInputReader;
     private static Scanner systemInputScanner;
     private static PrintWriter serverOutputWriter;
+    
+    
+    public static boolean isUnitTest;
+    public static String lastMessageReceivedFromServer = null;
+    public static String clientsList = null;
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         // This runs continuously.
+        
         while (true){
             System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Enter chat server IP to connect:" + ColouredText.ANSI_RESET);
             serverName = reader.readLine();
             // After an input has been read into the runClient() method.
+            
             runClient();
         }
+    }
+    
+    public static void setServerName(String name) {
+    	serverName = name;
     }
 
     public static void runClient(){
@@ -31,16 +43,19 @@ public class ChatClient {
         // If the connect method fails to connect, then the user will be informed and the user will have to enter another IP.
         if(!connect()){
             System.out.println(ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + "[ChatClient] Could not connect!" + ColouredText.ANSI_RESET);
+            /*connectionEventHandler.onConnectionFailed();*/
+            /* ConnectionEventHandler connectionEventHandler*/
         }
         else {
             // If the user is able to connect then the user will be informed, the startMessageReader() method and startInputReader() method will be called.
+        	/*connectionEventHandler.onConnected();*/
             System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Connected Successfully!" + ColouredText.ANSI_RESET);
             startMessageReader(); // Used to read messages from the server.
             startInputReader(); // Used to handle user input into the client.
         }
     }
 
-    private static boolean connect(){
+    public static boolean connect(){
         try {
             int serverPort = 19132;
             Socket socket = new Socket(serverName, serverPort);
@@ -50,12 +65,16 @@ public class ChatClient {
             systemInputScanner = new Scanner(System.in);
             serverOutputWriter = new PrintWriter(serverOutputStream, true);
             return true;
+        } catch (IOException ignored) {
         }
-        catch (IOException ignored){
-            ;
-        }
+        
         // If the connect method fails to connect then it will return false.
         return false;
+        
+    }
+    
+    public static boolean isConnected() {
+    	return (serverOutputWriter != null);
     }
 
     private static void startMessageReader(){
@@ -75,6 +94,10 @@ public class ChatClient {
         byte[] closedBytes2 = {67, 76, 79, 83, 69, 68}; // Bytes for string: CLOSED
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
+            	lastMessageReceivedFromServer = line;
+            	if (line.contains("Clients online and their info:")) {
+            		clientsList = line;
+            	}
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                 if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
                     System.out.println(ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + "Disconnected from server!" + ColouredText.ANSI_RESET);
@@ -84,6 +107,7 @@ public class ChatClient {
                     // If the received message in bytes is not equivalent to closedBytes1 or 2, then it is recognised as a normal message and will be outputted to the user.
                     line = line.replaceFirst("^\\s+", "");
                     System.out.println(line);
+                    
                 }
             }
         }
@@ -96,9 +120,17 @@ public class ChatClient {
 
     private static void startInputReader(){
         // Everytime the user inputs a string into the console the input will be written to the server and handled on the server side.
-        while (systemInputScanner.hasNextLine()) {
-            serverOutputWriter.println(systemInputScanner.nextLine());
-        }
+       
+        if (!isUnitTest) {
+        	 while (systemInputScanner.hasNextLine()) {
+             	sendMessageToServer(systemInputScanner.nextLine());
+             }
+             
+    	}
+    }
+    
+    public static void sendMessageToServer(String message) {
+    	serverOutputWriter.println(message);
     }
 
 }
