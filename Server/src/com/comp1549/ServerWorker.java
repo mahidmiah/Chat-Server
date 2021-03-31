@@ -47,7 +47,7 @@ public class ServerWorker extends Thread {
         this.uniqueID = UUID.randomUUID(); //Generates a random ID for all instances
         this.IP = this.clientSocket.getInetAddress().toString(); // Clients IP
         this.Port = String.valueOf(clientSocket.getPort()); // Clients Port
-        this.outputStream.write(Messages.YouAreConnectedToTheChatServer.getBytes());
+        this.outputStream.write(Messages.PrependTimeStamp(Messages.YouAreConnectedToTheChatServer).getBytes());
         String line;
 
         // If the user is not logged in, the handleClientLogin() will be called.
@@ -67,8 +67,8 @@ public class ServerWorker extends Thread {
                 // The code block tries to handle the input in a try/catch block. If the method is unable to read from the clients socket it means the user has disconnected incorrectly.
                 // Therefore, this is ERROR HANDLING: the catch block will close the clients socket using the handleClientSocket method and broadcast to the server that the client has disconnected.
                 handleClientClose(); // Closes the client socket
-                System.out.printf((Messages.ClientDisconnectedWithoutQuitCommand) + "%n", this.IP, this.Port);
-                ServerMain.broadcastMessage(String.format(Messages.ServerClientDisconnected, this.formattedUsername));
+                System.out.printf((Messages.PrependTimeStamp(Messages.ClientDisconnectedWithoutQuitCommand)) + "%n", this.IP, this.Port);
+                ServerMain.broadcastMessage(String.format(Messages.PrependTimeStamp(Messages.ServerClientDisconnected), this.formattedUsername));
                 removeAdmin(); // ERROR HANDLING: Everytime a user disconnects regularly/irregularly this method will be run to remove the user as the Coordinator (only if the user already was/is the coordinator)
             }
         }
@@ -77,24 +77,24 @@ public class ServerWorker extends Thread {
     private void handleClientLogin() {
         // This method is used to login the user, in other words it asks the user to input a valid username before they are able to communicate with other users on the server.
         try {
-            this.outputStream.write(Messages.UsernamePrompt.getBytes());
+            this.outputStream.write(Messages.PrependTimeStamp(Messages.UsernamePrompt).getBytes());
             String line;
             while ((line = this.reader.readLine()) != null){
                 String[] tokens = line.split(" ", 3);
                 if(!tokens[0].equals("") && !String.valueOf(tokens[0].charAt(0)).equals("/")){
                     this.userName = tokens[0];
-                    this.outputStream.write(String.format(Messages.ClientUsernameConfirmation, this.userName).getBytes());
+                    this.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.ClientUsernameConfirmation), this.userName).getBytes());
                     // The below line sets the users formatted username which consists of their name and unique ID.
                     this.formattedUsername = (ColouredText.ANSI_CYAN + ColouredText.ANSI_BOLD + "[" + this.userName + " (" + this.uniqueID.toString() + ")]" + ColouredText.ANSI_RESET);
-                    ServerMain.broadcastMessage(String.format(Messages.ClientJoinedTheServer, this.formattedUsername));
+                    ServerMain.broadcastMessage(String.format(Messages.PrependTimeStamp(Messages.ClientJoinedTheServer), this.formattedUsername));
                     this.LoggedIn = true;
 
                     StringBuilder message = new StringBuilder();
-                    message.append(Messages.OnlineClientsListTitle);
+                    message.append(Messages.PrependTimeStamp(Messages.OnlineClientsListTitle));
                     // The workers HashSet will be looped though, for each worker, the message string variable will be appended with the current worker in loops formatted username, IP, PORT and username.
                     for (ServerWorker worker_ : ServerMain.workers){
                         if (worker_.LoggedIn){
-                            message.append(String.format(Messages.ClientInfo, worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
+                            message.append(String.format(Messages.PrependTimeStamp(Messages.ClientInfo), worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
                         }
                     }
 
@@ -102,7 +102,7 @@ public class ServerWorker extends Thread {
                     break;
                 }
                 else {
-                    this.outputStream.write(Messages.UsernameNotProvided.getBytes());
+                    this.outputStream.write(Messages.PrependTimeStamp(Messages.UsernameNotProvided).getBytes());
                 }
             }
         }
@@ -113,7 +113,7 @@ public class ServerWorker extends Thread {
             try {
                 //The user has disconnected without logging in so the clients socket is closed with handleClientSocket, and the console is informed.
                 handleClientClose();
-                System.out.printf((Messages.ClientDisconnectedWithoutLoggingIn) + "%n", this.IP, this.Port);
+                System.out.printf((Messages.PrependTimeStamp(Messages.ClientDisconnectedWithoutLoggingIn)) + "%n", this.IP, this.Port);
             }
             catch (IOException ignored){
                 ;
@@ -129,7 +129,7 @@ public class ServerWorker extends Thread {
             }
             else{
                 // if this line es executed it means that the input is not a command but rather a normal message which is to be broadcast.
-                ServerMain.broadcastMessage(Messages.getTime() + " " + this.formattedUsername + ": " + fullToken + "\n"); // Broadcasts the message formatted with the users message.
+                ServerMain.broadcastMessage(Messages.PrependTimeStamp(" " + this.formattedUsername) + ": " + fullToken + "\n"); // Broadcasts the message formatted with the users message.
             }
         }
     }
@@ -152,7 +152,7 @@ public class ServerWorker extends Thread {
         }
         else {
             //If the token[0] is not valid then the user will be informed they have inputted an unknown command.
-            this.outputStream.write(Messages.ClientUnknownCommand.getBytes());
+            this.outputStream.write(Messages.PrependTimeStamp(Messages.ClientUnknownCommand).getBytes());
         }
     }
 
@@ -163,9 +163,9 @@ public class ServerWorker extends Thread {
     }
 
     private void handleClientTimeout() throws IOException {
-        System.out.printf((Messages.ConsoleClientTimeout) + "%n", this.formattedUsername);
+        System.out.printf((Messages.PrependTimeStamp(Messages.ConsoleClientTimeout)) + "%n", this.formattedUsername);
         handleClientClose();
-        ServerMain.broadcastMessage(String.format(Messages.ChatClientTimeout, this.formattedUsername));
+        ServerMain.broadcastMessage(String.format(Messages.PrependTimeStamp(Messages.ChatClientTimeout), this.formattedUsername));
         removeAdmin();
     }
 

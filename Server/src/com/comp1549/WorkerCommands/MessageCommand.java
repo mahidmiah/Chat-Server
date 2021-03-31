@@ -15,7 +15,7 @@ public class MessageCommand {
         }
         else {
             // If there are not the number of correct parameters inputted, then the user/client will be informed.
-            worker.outputStream.write(Messages.MessageCommandError.getBytes());
+            worker.outputStream.write(Messages.PrependTimeStamp(Messages.MessageCommandError).getBytes());
         }
     }
 
