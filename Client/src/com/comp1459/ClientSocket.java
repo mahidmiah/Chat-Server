@@ -1,5 +1,7 @@
 package com.comp1459;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,6 +11,8 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class ClientSocket {
@@ -32,6 +36,7 @@ public class ClientSocket {
 	
 	String serverName; // This is used to store the server IP address
 	int serverPort = 19132;
+	public Socket socket;
     public BufferedReader ServerBufferedInputReader;
     public PrintWriter serverOutputWriter;
     
@@ -79,7 +84,8 @@ public class ClientSocket {
     
     public boolean connect(){
         try {
-            Socket socket = new Socket(this.serverName, this.serverPort);
+            socket = new Socket(this.serverName, this.serverPort);
+            
             OutputStream serverOutputStream = socket.getOutputStream();
             InputStream serverInputStream = socket.getInputStream();
             ServerBufferedInputReader = new BufferedReader(new InputStreamReader(serverInputStream));
@@ -91,6 +97,15 @@ public class ClientSocket {
         // If the connect method fails to connect then it will return false.
         return false;
         
+    }
+    
+    public void disconnect() throws IOException {
+    	this.sendMessageToServer("/quit");
+    	socket.close();
+    }
+    
+    public boolean isConnected() {
+    	return socket.isConnected();
     }
     
     private void startMessageReader(){
@@ -143,6 +158,37 @@ public class ClientSocket {
     
     public void sendMessageToServer(String message) {
     	serverOutputWriter.println(message);
+    }
+    
+    public String getUUIDfromClientsListByUsername(String targetUsername) throws Exception {
+    	
+    	String targetClientInfo = null;
+    	for(String clientInfo : clientsList) {
+    		String usernameRegex = "Username:\\s([a-zA-Z0-9!@#$&()\\\\\\-`\\.\\+\\,\\/\\\"]+)";
+    		Pattern p = Pattern.compile(usernameRegex);
+    		
+    		Matcher m = p.matcher(clientInfo);
+    		
+    		if (m.find()) {
+    			targetClientInfo = clientInfo;
+    		}
+    	}
+    	
+    	if (targetClientInfo == null) {
+    		throw new Exception("User '" + targetUsername + "' not found.");	
+    	}
+    	String uuidRegex = "UUID:\\s([a-zA-Z0-9\\-]+)";
+    	Pattern p = Pattern.compile(uuidRegex);
+		Matcher m = p.matcher(targetClientInfo);
+		
+		String clientUUID = null; 
+		if (m.find()) {
+			clientUUID = m.group(1);
+		} else {
+			throw new Exception("User '" + targetUsername + "' not found.");
+		}
+		return clientUUID;
+    	
     }
     
     
