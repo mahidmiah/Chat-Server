@@ -19,7 +19,23 @@ public class ServerMain {
     public static boolean adminExists = false; //This boolean is used to check if an Admin (Coordinator) exists.
 
     public static void main(String[] args) {
-        int port = 19132; //This is the default/fixed random port used for the server.
+        int port = -1;
+
+        /**
+         * Find the port parameter (--port) and its value (--port {value})
+         * that are in the arguments
+         *
+         */
+        for (int i = 0; i < args.length; i++) {
+
+            String value = args[i];
+            if (value.equals("--port") && (i + 1) < args.length) {
+                port = Integer.parseInt(args[i+1]);
+            }
+
+        }
+
+        //int port = 19132; //This is the default/fixed random port used for the server.
         systemInputScanner = new Scanner(System.in);
         startSetAdminLoop(); //This method extends the Thread class in order to continuously run a method which checks if an Admin (Coordinator) exists, if not, one will be selected by the method.
         startInputReader(); //This methods also extends the Thread class to continuously call another method to check for user/console input.
