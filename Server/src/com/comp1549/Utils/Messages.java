@@ -72,9 +72,9 @@ public class Messages {
 
     public static String MessageCommandError = getTime() + ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + " [Server] Error, Command Usage: /msg <client UUID> <message>" + ColouredText.ANSI_RESET + "\n";
 
-    public static String OnlineClientsListTitle = getTime() + ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + " [Server] Clients online and their info:" + ColouredText.ANSI_RESET + "\n";
+    public static String OnlineClientsListTitle = getTime() + ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + " [Server] Clients online and their info:" + ColouredText.ANSI_RESET;
 
-    public static String ClientInfo = ColouredText.ANSI_BOLD + ColouredText.ANSI_GREEN + "* %s" + ColouredText.ANSI_GREEN + ColouredText.ANSI_BOLD + " - IP: %s, Port: %s, UUID: %s, Username: %s.\n";
+    public static String ClientInfo = ColouredText.ANSI_BOLD + ColouredText.ANSI_GREEN + "# %s" + ColouredText.ANSI_GREEN + ColouredText.ANSI_BOLD + " - IP: %s, Port: %s, UUID: %s, Username: %s.";
 
     public static String UnauthorizedCommand = getTime() + ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + " [Server] Error, You do not have permission to run this command!" + ColouredText.ANSI_RESET + "\n";
 

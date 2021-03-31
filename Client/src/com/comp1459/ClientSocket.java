@@ -109,9 +109,13 @@ public class ClientSocket {
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
             	lastMessageReceivedFromServer = line;
-            	if (line.contains("Clients online and their info:")) {
-            		clientsList = line;
-            	}
+                if (line.contains("Clients online and their info")) {
+                    clientsList = line;
+                    String[] tokens = clientsList.split("#");
+                    for (String token : tokens){
+                        System.out.println(token);
+                    }
+                }
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                 if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
                     this.onServerRequestedTermination();

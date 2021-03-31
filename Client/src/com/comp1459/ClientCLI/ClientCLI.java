@@ -121,9 +121,22 @@ public class ClientCLI {
 	private static void startInputReader(){
         // Everytime the user inputs a string into the console the input will be written to the server and handled on the server side.
 		systemInputScanner = new Scanner(System.in);
+//		while (systemInputScanner.hasNextLine()) {
+//   		 	clientSocketCLI.sendMessageToServer(systemInputScanner.nextLine());
+//        }
 		while (systemInputScanner.hasNextLine()) {
-   		 	clientSocketCLI.sendMessageToServer(systemInputScanner.nextLine());
-        }
+			String line = systemInputScanner.nextLine();
+			if (line.equalsIgnoreCase(".list")){
+				System.out.println("Locally saved list of users:");
+				String[] tokens = clientSocketCLI.clientsList.split("#");
+				for (String token : tokens){
+					System.out.println(token);
+				}
+			}
+			else {
+				clientSocketCLI.sendMessageToServer(line);
+			}
+		}
     }
 
 }

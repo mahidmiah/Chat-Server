@@ -14,8 +14,8 @@ public class ChatClient {
     private static BufferedReader ServerBufferedInputReader;
     private static Scanner systemInputScanner;
     private static PrintWriter serverOutputWriter;
-    
-    
+
+
     public static boolean isUnitTest;
     public static String lastMessageReceivedFromServer = null;
     public static String clientsList = null;
@@ -23,18 +23,18 @@ public class ChatClient {
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         // This runs continuously.
-        
+
         while (true){
             System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Enter chat server IP to connect:" + ColouredText.ANSI_RESET);
             serverName = reader.readLine();
             // After an input has been read into the runClient() method.
-            
+
             runClient();
         }
     }
-    
+
     public static void setServerName(String name) {
-    	serverName = name;
+        serverName = name;
     }
 
     public static void runClient(){
@@ -48,7 +48,7 @@ public class ChatClient {
         }
         else {
             // If the user is able to connect then the user will be informed, the startMessageReader() method and startInputReader() method will be called.
-        	/*connectionEventHandler.onConnected();*/
+            /*connectionEventHandler.onConnected();*/
             System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Connected Successfully!" + ColouredText.ANSI_RESET);
             startMessageReader(); // Used to read messages from the server.
             startInputReader(); // Used to handle user input into the client.
@@ -67,14 +67,14 @@ public class ChatClient {
             return true;
         } catch (IOException ignored) {
         }
-        
+
         // If the connect method fails to connect then it will return false.
         return false;
-        
+
     }
-    
+
     public static boolean isConnected() {
-    	return (serverOutputWriter != null);
+        return (serverOutputWriter != null);
     }
 
     private static void startMessageReader(){
@@ -94,12 +94,15 @@ public class ChatClient {
         byte[] closedBytes2 = {67, 76, 79, 83, 69, 68}; // Bytes for string: CLOSED
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
-            	lastMessageReceivedFromServer = line;
-            	if (line.contains("Clients online and their info:")) {
-            		clientsList = line;
-            	}
+                if (line.contains("Clients online and their info")) {
+                    clientsList = line;
+                    String[] tokens = clientsList.split("#");
+                    for (String token : tokens){
+                        System.out.println(token);
+                    }
+                }
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
-                if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
+                else if (Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
                     System.out.println(ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + "Disconnected from server!" + ColouredText.ANSI_RESET);
                     System.exit(0); //Exits the program.
                 }
@@ -107,7 +110,6 @@ public class ChatClient {
                     // If the received message in bytes is not equivalent to closedBytes1 or 2, then it is recognised as a normal message and will be outputted to the user.
                     line = line.replaceFirst("^\\s+", "");
                     System.out.println(line);
-                    
                 }
             }
         }
@@ -120,17 +122,27 @@ public class ChatClient {
 
     private static void startInputReader(){
         // Everytime the user inputs a string into the console the input will be written to the server and handled on the server side.
-       
+
         if (!isUnitTest) {
-        	 while (systemInputScanner.hasNextLine()) {
-             	sendMessageToServer(systemInputScanner.nextLine());
-             }
-             
-    	}
+            while (systemInputScanner.hasNextLine()) {
+                String line = systemInputScanner.nextLine();
+                if (line.equalsIgnoreCase(".list")){
+                    System.out.println("Locally saved list of users:");
+                    String[] tokens = clientsList.split("#");
+                    for (String token : tokens){
+                        System.out.println(token);
+                    }
+                }
+                else {
+                    sendMessageToServer(line);
+                }
+            }
+
+        }
     }
-    
+
     public static void sendMessageToServer(String message) {
-    	serverOutputWriter.println(message);
+        serverOutputWriter.println(message);
     }
 
 }

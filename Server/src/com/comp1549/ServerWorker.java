@@ -88,14 +88,17 @@ public class ServerWorker extends Thread {
                     this.formattedUsername = (ColouredText.ANSI_CYAN + ColouredText.ANSI_BOLD + "[" + this.userName + " (" + this.uniqueID.toString() + ")]" + ColouredText.ANSI_RESET);
                     ServerMain.broadcastMessage(String.format(Messages.ClientJoinedTheServer, this.formattedUsername));
                     this.LoggedIn = true;
+
                     StringBuilder message = new StringBuilder();
+                    message.append(Messages.OnlineClientsListTitle);
                     // The workers HashSet will be looped though, for each worker, the message string variable will be appended with the current worker in loops formatted username, IP, PORT and username.
                     for (ServerWorker worker_ : ServerMain.workers){
                         if (worker_.LoggedIn){
                             message.append(String.format(Messages.ClientInfo, worker_.formattedUsername, worker_.IP, worker_.Port, worker_.uniqueID, worker_.userName));
                         }
                     }
-                    this.outputStream.write(message.toString().getBytes());
+
+                    this.outputStream.write((message + ColouredText.ANSI_RESET + "\n").getBytes());
                     break;
                 }
                 else {
