@@ -184,7 +184,7 @@ class ClientTest {
 		// The mainClientSocket(daniel) is the coordinator because he's the only one connected.
 		// Once John connects and Daniel disconnects, John should be the new coordinator
 		// We test this by running the /list command as John
-		// If the server message contains "Clients online and their info", it means he has
+		// If the server replies with a message that contains "Clients online and their info", it means he has
 		// permission to execute the /list command, which only the coordinator can use.
 		
 		ClientSocket johnSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
@@ -192,7 +192,7 @@ class ClientTest {
 		johnSocket.sendMessageToServer("john");
 		
 		mainClientSocket.disconnect();
-		TimeUnit.SECONDS.sleep(3); // Wait for disconnections
+		TimeUnit.SECONDS.sleep(3); // Wait for disconnection
 		johnSocket.sendMessageToServer("/list");
 		TimeUnit.SECONDS.sleep(3);
 		boolean isAllowed = johnSocket.lastMessageReceivedFromServer.contains("Clients online and their info");
