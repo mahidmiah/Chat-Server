@@ -5,7 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ChatClient {
@@ -18,23 +20,41 @@ public class ChatClient {
 
     public static boolean isUnitTest;
     public static String lastMessageReceivedFromServer = null;
-    public static String clientsList = null;
+    public static Set<String> clientsList = new HashSet<>();
+
+    public static int port = -1;
+    public static String serverAddress = null;
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         // This runs continuously.
 
+
+
+        /**
+         * Find the parameters(e.g --port, --server-address) and its values(e.g --port {value} --server-address {value})
+         * that are in the CLI arguments
+         *
+         */
+        for (int i = 0; i < args.length; i++) {
+
+            String value = args[i];
+            if (value.equals("--port") && (i + 1) < args.length) {
+                port = Integer.parseInt(args[i+1]);
+            }
+            if (value.equals("--server-address") && (i + 1) < args.length) {
+                serverAddress = args[i+1];
+            }
+        }
+
         while (true){
-            System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Enter chat server IP to connect:" + ColouredText.ANSI_RESET);
-            serverName = reader.readLine();
+            System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Connecting to: " + serverAddress + " " + port + ColouredText.ANSI_RESET);
+            //System.out.println(ColouredText.ANSI_YELLOW + ColouredText.ANSI_BOLD + "[ChatClient] Enter chat server IP to connect:" + ColouredText.ANSI_RESET);
+            //serverAddress = reader.readLine();
             // After an input has been read into the runClient() method.
 
             runClient();
         }
-    }
-
-    public static void setServerName(String name) {
-        serverName = name;
     }
 
     public static void runClient(){
@@ -42,7 +62,8 @@ public class ChatClient {
 
         // If the connect method fails to connect, then the user will be informed and the user will have to enter another IP.
         if(!connect()){
-            System.out.println(ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + "[ChatClient] Could not connect!" + ColouredText.ANSI_RESET);
+            System.out.println(ColouredText.ANSI_RED + ColouredText.ANSI_BOLD + "[ChatClient] Could not connect, restart app with valid params!" + ColouredText.ANSI_RESET);
+            System.exit(0); //Exits the program.
             /*connectionEventHandler.onConnectionFailed();*/
             /* ConnectionEventHandler connectionEventHandler*/
         }
@@ -58,7 +79,7 @@ public class ChatClient {
     public static boolean connect(){
         try {
             int serverPort = 19132;
-            Socket socket = new Socket(serverName, serverPort);
+            Socket socket = new Socket(serverAddress, port);
             OutputStream serverOutputStream = socket.getOutputStream();
             InputStream serverInputStream = socket.getInputStream();
             ServerBufferedInputReader = new BufferedReader(new InputStreamReader(serverInputStream));
@@ -95,11 +116,17 @@ public class ChatClient {
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
                 if (line.contains("Clients online and their info")) {
-                    clientsList = line;
-                    String[] tokens = clientsList.split("#");
-                    for (String token : tokens){
-                        System.out.println(token);
+                    String[] tokens = line.split("#");
+                    String formattedLine = "";
+                    for (int i = 0; i < tokens.length; i++) {
+
+                        String token = tokens[i];
+                        formattedLine = formattedLine + token + "\n";
+                        if (i > 0) {
+                            clientsList.add(token);
+                        }
                     }
+                    System.out.println(formattedLine);
                 }
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                 else if (Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
@@ -128,8 +155,7 @@ public class ChatClient {
                 String line = systemInputScanner.nextLine();
                 if (line.equalsIgnoreCase(".list")){
                     System.out.println("Locally saved list of users:");
-                    String[] tokens = clientsList.split("#");
-                    for (String token : tokens){
+                    for (String token : clientsList){
                         System.out.println(token);
                     }
                 }

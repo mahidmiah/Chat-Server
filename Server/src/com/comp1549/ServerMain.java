@@ -19,17 +19,33 @@ public class ServerMain {
     public static boolean adminExists = false; //This boolean is used to check if an Admin (Coordinator) exists.
 
     public static void main(String[] args) {
-        int port = 19132; //This is the default/fixed random port used for the server.
+        int port = -1;
+
+        /**
+         * Find the port parameter (--port) and its value (--port {value})
+         * that are in the arguments
+         *
+         */
+        for (int i = 0; i < args.length; i++) {
+
+            String value = args[i];
+            if (value.equals("--port") && (i + 1) < args.length) {
+                port = Integer.parseInt(args[i+1]);
+            }
+
+        }
+
+        //int port = 19132; //This is the default/fixed random port used for the server.
         systemInputScanner = new Scanner(System.in);
         startSetAdminLoop(); //This method extends the Thread class in order to continuously run a method which checks if an Admin (Coordinator) exists, if not, one will be selected by the method.
         startInputReader(); //This methods also extends the Thread class to continuously call another method to check for user/console input.
         try {
             ServerSocket serverSocket = new ServerSocket(port); //Server socket, server is now join-able (As long as serverOpen is true).
-            System.out.printf((Messages.ServerPortOpen) + "%n", port);
-            System.out.println(Messages.HelpCommandSuggestion);
+            System.out.printf((Messages.PrependTimeStamp(Messages.ServerPortOpen)) + "%n", port);
+            System.out.println(Messages.PrependTimeStamp(Messages.HelpCommandSuggestion));
             while (serverOpen){
                 Socket clientSocket = serverSocket.accept(); //Accepts any clients trying to join.
-                System.out.printf((Messages.AcceptedClientConnection) + "%n", clientSocket.getInetAddress(), clientSocket.getPort());
+                System.out.printf((Messages.PrependTimeStamp(Messages.AcceptedClientConnection)) + "%n", clientSocket.getInetAddress(), clientSocket.getPort());
 
                 //Everytime a new client connection is accepted, a new ServerWorker instance will be created and added to the workers hashset.
                 ServerWorker serverWorker = new ServerWorker(clientSocket);
@@ -73,20 +89,20 @@ public class ServerMain {
                 if (worker.uniqueID.toString().equals(receiverUUID)){ //Checks if the workers unique ID matches that of the specified one.
                     if(worker.isStillConnected()){ // if the user is found, this will check that the user is still connected (hasn't timed out). ERROR HANDLING: if the user has timed out, sending the user private messages will cause errors.
                         //Sends the private messages between the two users/client.
-                        senderWorker.outputStream.write(String.format(Messages.SentPrivateMessage, worker.formattedUsername, message).getBytes());
-                        worker.outputStream.write(String.format(Messages.ReceivedPrivateMessage, senderWorker.formattedUsername, message).getBytes());
+                        senderWorker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.SentPrivateMessage), worker.formattedUsername, message).getBytes());
+                        worker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.ReceivedPrivateMessage), senderWorker.formattedUsername, message).getBytes());
                         userFound = true; //Sets to true so that the user not found message will not be displayed.
                     }
                     else {
                         // If the user is no longer connected (timed out), the sender worker will be informed.
                         userFound = true; //Set to true so the user not found message will not be displayed.
-                        senderWorker.outputStream.write(String.format(Messages.RecipientNoLongerOnline, receiverUUID).getBytes());
+                        senderWorker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.RecipientNoLongerOnline), receiverUUID).getBytes());
                     }
                     break;
                 }
             }
             if(!userFound){ // If after the loop is finished, and no user is found the sender worker will be informed.
-                senderWorker.outputStream.write(String.format(Messages.RecipientNotFoundOnServer, receiverUUID).getBytes());
+                senderWorker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.RecipientNotFoundOnServer), receiverUUID).getBytes());
             }
         }
     }
@@ -125,7 +141,7 @@ public class ServerMain {
             }
             else{
                 //If the message doesn't start with a slash is recognised as normal message and broadcast.
-                broadcastMessage(String.format(Messages.FullConsoleInput, fullToken));
+                broadcastMessage(String.format(Messages.PrependTimeStamp(Messages.FullConsoleInput), fullToken));
             }
         }
     }
@@ -143,7 +159,7 @@ public class ServerMain {
         }
         else {
             //If no valid command is inputted the console is informed by an error message.
-            System.out.println(Messages.UnknownCommand);
+            System.out.println(Messages.PrependTimeStamp(Messages.UnknownCommand));
         }
     }
 
@@ -151,7 +167,7 @@ public class ServerMain {
         //This method disconnects all users from the server.
 
         for(ServerWorker worker : workers){
-            System.out.printf((Messages.ClientDisconnected) + "%n", worker.formattedUsername);
+            System.out.printf((Messages.PrependTimeStamp(Messages.ClientDisconnected)) + "%n", worker.formattedUsername);
             worker.outputStream.write("CLOSED".getBytes()); //Sends the client the bytes to close/disconnect.
 
             //The code below is the same has the handleClientClose() function from the ServerWorker class excluding 'workers.remove(worker)' as this is not possible and threw an error.
@@ -186,8 +202,8 @@ public class ServerMain {
                         worker.isAdmin = true; //Sets the isAdmin boolean to true
                         adminExists = true; //Sets the adminExists boolean to true
                         worker.formattedUsername = ColouredText.ANSI_PURPLE + ColouredText.ANSI_BOLD + "[Coordinator] " + worker.formattedUsername; //Alters the clients username to include [Coordinator].
-                        System.out.println(String.format(Messages.NewCoordinator, worker.formattedUsername));
-                        broadcastMessage(String.format(Messages.NewCoordinator, worker.formattedUsername)); //Broadcast to the server that this user is now the new Coordinator.
+                        System.out.println(String.format(Messages.PrependTimeStamp(Messages.NewCoordinator), worker.formattedUsername));
+                        broadcastMessage(String.format(Messages.PrependTimeStamp(Messages.NewCoordinator), worker.formattedUsername)); //Broadcast to the server that this user is now the new Coordinator.
                         break;
                     }
                 }
