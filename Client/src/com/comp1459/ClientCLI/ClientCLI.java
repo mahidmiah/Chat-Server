@@ -128,8 +128,7 @@ public class ClientCLI {
 			String line = systemInputScanner.nextLine();
 			if (line.equalsIgnoreCase(".list")){
 				System.out.println("Locally saved list of users:");
-				String[] tokens = clientSocketCLI.clientsList.split("#");
-				for (String token : tokens){
+				for (String token : clientSocketCLI.clientsList){
 					System.out.println(token);
 				}
 			}

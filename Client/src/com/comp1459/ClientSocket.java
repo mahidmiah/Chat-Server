@@ -5,7 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
@@ -46,7 +48,7 @@ public class ClientSocket {
     
     public boolean isUnitTest;
     public String lastMessageReceivedFromServer = null;
-    public String clientsList = null;
+    public Set<String> clientsList = new HashSet<>();
     
     public ClientSocket(String serverIp, int serverPort) throws Exception {
         // This runs continuously.
@@ -110,17 +112,22 @@ public class ClientSocket {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
             	lastMessageReceivedFromServer = line;
                 if (line.contains("Clients online and their info")) {
-                    clientsList = line;
-                    String[] tokens = clientsList.split("#");
-                    for (String token : tokens){
-                        System.out.println(token);
+                    String[] tokens = line.split("#");
+                    String formattedLine = "";
+                    for (int i = 0; i < tokens.length; i++) {
+                    	
+                    	String token = tokens[i];
+                    	formattedLine = formattedLine + token + "\n";
+                    	if (i > 0) {
+                    		clientsList.add(token);
+                    	}
+                    	
                     }
-                }
-                // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
-                if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
+                    this.onServerNormalMessageReceived(formattedLine);
+                } else if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
+                	// If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                     this.onServerRequestedTermination();
-                }
-                else {
+                } else {
                     // If the received message in bytes is not equivalent to closedBytes1 or 2, then it is recognised as a normal message and will be outputted to the user.
                     line = line.replaceFirst("^\\s+", "");
                     this.onServerNormalMessageReceived(line);
