@@ -186,6 +186,7 @@ public class ServerMain {
                         worker.isAdmin = true; //Sets the isAdmin boolean to true
                         adminExists = true; //Sets the adminExists boolean to true
                         worker.formattedUsername = ColouredText.ANSI_PURPLE + ColouredText.ANSI_BOLD + "[Coordinator] " + worker.formattedUsername; //Alters the clients username to include [Coordinator].
+                        System.out.println(String.format(Messages.NewCoordinator, worker.formattedUsername));
                         broadcastMessage(String.format(Messages.NewCoordinator, worker.formattedUsername)); //Broadcast to the server that this user is now the new Coordinator.
                         break;
                     }
