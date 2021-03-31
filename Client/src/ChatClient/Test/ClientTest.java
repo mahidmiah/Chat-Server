@@ -2,6 +2,7 @@ package ChatClient.Test;
 import com.comp1459.ChatClient;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -20,11 +21,27 @@ class ClientTest {
 	public static String defaultServerAddress = "127.0.0.1";
 	public static int defaultServerPort = 19132;
 	
+	public static class LoggerClientSocket extends ClientSocket {
+
+		public LoggerClientSocket(String serverIp, int serverPort) throws Exception {
+			super(serverIp, serverPort);
+			// TODO Auto-generated constructor stub
+		}
+		
+		@Override
+		public void onServerMessageReceived(String message) {
+			System.out.println("-- DANIEL RECEIVED LINE --");
+			System.out.println(message);
+			System.out.println("--------------------------");
+		}
+		
+	}
+	
 
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
 		
-		mainClientSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
+		mainClientSocket = new LoggerClientSocket(defaultServerAddress, defaultServerPort);
 		mainClientSocket.isUnitTest = true;
 		try {
 			mainClientSocket.runClient();
@@ -89,6 +106,8 @@ class ClientTest {
 		String messageToSend = "/msg " + receiverId + " " + message;
 		mainClientSocket.sendMessageToServer(messageToSend);
 		TimeUnit.SECONDS.sleep(2);
+		System.out.println("mainClientSocket.lastMessageReceivedFromServer");
+		System.out.println(mainClientSocket.lastMessageReceivedFromServer);
 		boolean containsMessage = mainClientSocket.lastMessageReceivedFromServer.contains(message);
 		boolean containsReceiverId = mainClientSocket.lastMessageReceivedFromServer.contains(receiverId);
 		johnSocket.disconnect();
@@ -96,14 +115,99 @@ class ClientTest {
 	}
 	
 	@Test
-	void testSendingClientsOnlineStatusToOtherClients() throws InterruptedException {
-		mainClientSocket.sendMessageToServer("/list");
+	void testSendingClientsOnlineStatusToOtherClients() throws Exception {
+		
+		
+		// Create multiple client sockets
+		ClientSocket johnSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
+		johnSocket.runClient();
+		johnSocket.sendMessageToServer("john");
 		TimeUnit.SECONDS.sleep(2);
-		assertFalse((mainClientSocket.clientsList.isEmpty()));
+		ClientSocket samanthaSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
+		samanthaSocket.runClient();
+		samanthaSocket.sendMessageToServer("samantha");
+		TimeUnit.SECONDS.sleep(2);
+		ClientSocket kyleSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
+		kyleSocket.runClient();
+		kyleSocket.sendMessageToServer("kyle");
+		TimeUnit.SECONDS.sleep(2);
+		
+		
+		
+		HashSet<ClientSocket> socketSet = new HashSet<ClientSocket>();
+		socketSet.add(mainClientSocket);
+		socketSet.add(johnSocket);
+		socketSet.add(samanthaSocket);
+		socketSet.add(kyleSocket);
+		
+		
+		// CLEAN CLIENTS LIST OF EACH CLIENT
+		for (ClientSocket clientSocket : socketSet) {
+			clientSocket.clientsList = new HashSet<>(); 
+		}
+		
+		mainClientSocket.sendMessageToServer("/list");
+		TimeUnit.SECONDS.sleep(6);
+		
+		boolean everyoneUpdatedClientsList = true;
+		
+		
+		// Verify if the clientsList was populated for each client after emitting the /list command
+		for (ClientSocket clientSocket : socketSet) {
+			if (clientSocket.clientsList.isEmpty()) {
+				clientSocket.sendMessageToServer("/info");
+				TimeUnit.SECONDS.sleep(2);
+				System.out.println("CLIENT WHO DID NOT RECEIVE");
+				System.out.println(clientSocket.lastMessageReceivedFromServer);
+				everyoneUpdatedClientsList = false;
+				break;
+			}
+		}
+		
+		// Disconnect temporary sockets
+		for (ClientSocket clientSocket : socketSet) {
+			if (clientSocket != mainClientSocket) {
+				clientSocket.disconnect();
+			}
+		}
+		
+		TimeUnit.SECONDS.sleep(2); // Wait for disconnections
+		
+		
+		assertTrue(everyoneUpdatedClientsList);
 		
 	}
 	
-	
+	@Test
+	void testCoordinatorSubstitution() throws Exception {
+		
+		// The mainClientSocket(daniel) is the coordinator because he's the only one connected.
+		// Once John connects and Daniel disconnects, John should be the new coordinator
+		// We test this by running the /list command as John
+		// If the server message contains "Clients online and their info", it means he has
+		// permission to execute the /list command, which only the coordinator can use.
+		
+		ClientSocket johnSocket = new ClientSocket(defaultServerAddress, defaultServerPort);
+		johnSocket.runClient();
+		johnSocket.sendMessageToServer("john");
+		
+		mainClientSocket.disconnect();
+		TimeUnit.SECONDS.sleep(3); // Wait for disconnections
+		johnSocket.sendMessageToServer("/list");
+		TimeUnit.SECONDS.sleep(3);
+		boolean isAllowed = johnSocket.lastMessageReceivedFromServer.contains("Clients online and their info");
+		
+		
+		mainClientSocket.runClient();
+		mainClientSocket.sendMessageToServer(username);
+		johnSocket.disconnect();
+		System.out.println("IS CONNECTED" + mainClientSocket.isConnected());
+		
+		
+		assertTrue(isAllowed);
+		
+		
+	}
 	
 
 }
