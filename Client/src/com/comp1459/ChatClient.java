@@ -5,7 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ChatClient {
@@ -18,7 +20,7 @@ public class ChatClient {
 
     public static boolean isUnitTest;
     public static String lastMessageReceivedFromServer = null;
-    public static String clientsList = null;
+    public static Set<String> clientsList = new HashSet<>();
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -95,11 +97,17 @@ public class ChatClient {
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
                 if (line.contains("Clients online and their info")) {
-                    clientsList = line;
-                    String[] tokens = clientsList.split("#");
-                    for (String token : tokens){
-                        System.out.println(token);
+                    String[] tokens = line.split("#");
+                    String formattedLine = "";
+                    for (int i = 0; i < tokens.length; i++) {
+
+                        String token = tokens[i];
+                        formattedLine = formattedLine + token + "\n";
+                        if (i > 0) {
+                            clientsList.add(token);
+                        }
                     }
+                    System.out.println(formattedLine);
                 }
                 // If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                 else if (Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
@@ -128,8 +136,7 @@ public class ChatClient {
                 String line = systemInputScanner.nextLine();
                 if (line.equalsIgnoreCase(".list")){
                     System.out.println("Locally saved list of users:");
-                    String[] tokens = clientsList.split("#");
-                    for (String token : tokens){
+                    for (String token : clientsList){
                         System.out.println(token);
                     }
                 }
