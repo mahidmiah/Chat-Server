@@ -35,12 +35,23 @@ public class ServerWorker extends Thread {
             handleClientSocket(); // The thread will continuously call the handleClientSocket method.
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Error occured in handleClientSocket();");
+            System.out.println("IS SOCEKT CLOSED: " + this.clientSocket.isClosed());
+            System.out.println("IP: " + this.IP);
+            System.out.println("PORT: " + this.Port);
+            System.out.println("USERNAME: " + this.userName);
+            System.out.println("UUID: " + this.uniqueID);
+
+
         }
     }
 
     private void handleClientSocket() throws IOException {
         // This method handles everything that the client does.
-
+        if (this.clientSocket.isClosed()) {
+            handleClosedSocket();
+            return;
+        }
         this.outputStream = this.clientSocket.getOutputStream();
         this.inputStream = this.clientSocket.getInputStream();
         this.reader = new BufferedReader(new InputStreamReader(inputStream)); // This is used to read all incoming messages from the client/user
@@ -169,10 +180,28 @@ public class ServerWorker extends Thread {
         removeAdmin();
     }
 
+    private void handleClosedSocket(){
+        if (this.clientSocket.isClosed() == false) {
+            try {
+                this.clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        this.Disconnected = true; // Sets the Disconnected boolean to true.
+        this.LoggedIn = false;
+        this.removeAdmin();
+        ServerMain.removeWorker(this); // Removes the clients instance from the workers hashset on the ServerMain class.
+    }
+
     public boolean isStillConnected() throws IOException {
         // Checks if the user is still connected by writing to it twice, the input is byte value 0, so nothing is displayed to the user if the user is still connected.
 
         boolean status = true;
+        if (this.outputStream == null) {
+            return false;
+        }
         try
         {
             // The output stream must be written to twice in order to check if the socket is still connected.

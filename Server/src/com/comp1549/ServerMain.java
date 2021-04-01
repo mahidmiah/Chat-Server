@@ -67,12 +67,21 @@ public class ServerMain {
 
         if (serverOpen){ // Will only run if the server is open, this is FAULT HANDLING: as while the server is closing (serverOpen is false) the server should not broadcast messages, as users can be disconnected the same moment they are sent the message which will cause errors.
             System.out.print(message);
-            for (ServerWorker worker : workers){ //Loops through all ServerWorkers in the workers hashset.
+            ArrayList<ServerWorker> workersToRemove = new ArrayList<ServerWorker>();
+
+            for (Iterator<ServerWorker> workersIT = workers.iterator(); workersIT.hasNext(); ) {
+                ServerWorker worker = workersIT.next();
                 if (worker.isStillConnected()){ //Checks if the user/client is still connected (hasn't timed out).
                     if(worker.LoggedIn){ //Checks if the user/client is logged in, the user shouldn't receive messages if they are not logged in.
                         worker.outputStream.write(message.getBytes()); //The user is sent the message which is being broadcast. (message is the parameter)
                     }
+                } else {
+                    workersToRemove.add(worker);
                 }
+            }
+            for (ServerWorker workerToRemove : workersToRemove) {
+                workerToRemove.removeAdmin();
+                removeWorker(workerToRemove);
             }
         }
     }
@@ -85,6 +94,7 @@ public class ServerMain {
 
         if (serverOpen){ // Will only run if the server is open, this is FAULT HANDLING: as while the server is closing (serverOpen is false) the server should not send private messages, as users can be disconnected the same moment they are sent the message which will cause errors.
             boolean userFound = false; // This boolean will be used to record if the user has been found on the server.
+            ServerWorker workerToRemove = null;
             for (ServerWorker worker : workers){ //Loops through all the ServerWorkers in the workers hashset.
                 if (worker.uniqueID.toString().equals(receiverUUID)){ //Checks if the workers unique ID matches that of the specified one.
                     if(worker.isStillConnected()){ // if the user is found, this will check that the user is still connected (hasn't timed out). ERROR HANDLING: if the user has timed out, sending the user private messages will cause errors.
@@ -97,12 +107,16 @@ public class ServerMain {
                         // If the user is no longer connected (timed out), the sender worker will be informed.
                         userFound = true; //Set to true so the user not found message will not be displayed.
                         senderWorker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.RecipientNoLongerOnline), receiverUUID).getBytes());
+                        workerToRemove = worker;
                     }
                     break;
                 }
             }
             if(!userFound){ // If after the loop is finished, and no user is found the sender worker will be informed.
                 senderWorker.outputStream.write(String.format(Messages.PrependTimeStamp(Messages.RecipientNotFoundOnServer), receiverUUID).getBytes());
+            }
+            if (workerToRemove != null) {
+                removeWorker(workerToRemove);
             }
         }
     }
@@ -196,6 +210,7 @@ public class ServerMain {
         //This method will continuously run and check whether a admin (coordinator) exists or not, if one does not exists then it at random will pick a new coordinator.
 
         while (serverOpen){ // Checks if the server is open. ERROR HANDLING: The server should not pick a new admin (Coordinator) while the server is closing (serverOpen set to false).
+
             if (!adminExists && (workers.size() > 0)){ // Checks if and admin doesn't exist, and also checks if there are any users connected, a new admin cant be picked if there are not connected clients.
                 for (ServerWorker worker: workers){
                     if (worker.LoggedIn){ //Ensures the user is logged in, as the user cannot become the admin if they are not logged in.
