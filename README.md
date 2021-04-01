@@ -32,7 +32,7 @@ The `--port` argument specifies the server port, the `--server-address` specifie
 
 
 ### Running Tests
-- JUnit 5.5.0 is a requirement to run the tests.
+- JUnit 5 is a requirement to run the tests.
 - A Server must be online, listening to the port 19132
 
 The tests can be executed by running the script:
