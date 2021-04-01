@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import com.comp1459.ClientSocket;
 import com.comp1459.ClientSocket.ConnectionException;
 class ClientTest {
@@ -63,7 +62,6 @@ class ClientTest {
 	}
 	
 	@Test
-	@Timeout(30)
 	void testConnect() {
 		
 		
