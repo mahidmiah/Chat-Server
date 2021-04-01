@@ -220,24 +220,29 @@ public class ClientSocket {
     public void sendMessageToServer(String message) {
     	serverOutputWriter.println(message);
     }
-    
+	public static String escapeSpecialRegexChars(String str) {
+		Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+		return SPECIAL_REGEX_CHARS.matcher(str).replaceAll("\\\\$0");
+	}
     public String getUUIDfromClientsListByUsername(String targetUsername) throws Exception {
     	
     	String targetClientInfo = null;
+
     	for(String clientInfo : clientsList) {
-    		String usernameRegex = "Username:\\s([a-zA-Z0-9!@#$&()\\\\\\-`\\.\\+\\,\\/\\\"]+)";
+    		String usernameRegex = "Username:\\s" + escapeSpecialRegexChars(targetUsername);
     		Pattern p = Pattern.compile(usernameRegex);
-    		
+
     		Matcher m = p.matcher(clientInfo);
-    		
     		if (m.find()) {
-    			targetClientInfo = clientInfo;
+				targetClientInfo = clientInfo;
+				break;
     		}
     	}
     	
     	if (targetClientInfo == null) {
     		throw new Exception("User '" + targetUsername + "' not found.");	
     	}
+    	System.out.println("FOUND TARGET INFO: " + targetUsername + " = " + targetClientInfo);
     	String uuidRegex = "UUID:\\s([a-zA-Z0-9\\-]+)";
     	Pattern p = Pattern.compile(uuidRegex);
 		Matcher m = p.matcher(targetClientInfo);

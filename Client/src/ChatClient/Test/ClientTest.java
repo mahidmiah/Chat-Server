@@ -69,9 +69,14 @@ class ClientTest {
 	void test() {
 		fail("Not yet implemented");
 	}
-	
+
+	/**
+	 *
+	 * Tests the ClientSocket connection to the Server
+	 */
 	@Test
 	void testConnect() throws Exception {
+
 		System.out.println(":::::::::::::::::::::::::::::::::::::::");
 		System.out.println("EXECUTING: testConnect");
 		System.out.println(":::::::::::::::::::::::::::::::::::::::");
@@ -84,7 +89,10 @@ class ClientTest {
 		assertTrue(isConnected);
 		
 	}
-	
+	/**
+	 *
+	 * Tests if the user can login to the server.
+	 */
 	@Test
 	void testLogin() throws Exception {
 		System.out.println(":::::::::::::::::::::::::::::::::::::::");
@@ -94,13 +102,20 @@ class ClientTest {
 		LoggerClientSocket mainClientSocket = new CreateMainClientSocket().run();
 		mainClientSocket.sendMessageToServer("/info");
 		TimeUnit.SECONDS.sleep(2);
+
+		// If the user can retrieve its information by executing the /info command
+		// that means the server recognized the user and it's logged in.
 		boolean containsUsername = mainClientSocket.lastMessageReceivedFromServer.contains(mainClientUsername);
+
 		mainClientSocket.disconnect();
 		TimeUnit.SECONDS.sleep(3);
 		assertTrue(containsUsername);
 	}
-	
-	
+
+	/**
+	 *
+	 * Test Public Messaging to the server
+	 */
 	@Test
 	void testSendMessageToServer() throws Exception {
 
@@ -117,7 +132,12 @@ class ClientTest {
 		TimeUnit.SECONDS.sleep(2);
 		assertTrue(didServerReceiveMessage);
 	}
-	
+
+
+	/**
+	 *
+	 * Test Private messaging
+	 */
 	@Test
 	void testPrivateMessaging() throws Exception {
 
@@ -130,21 +150,45 @@ class ClientTest {
 		ClientSocket johnSocket = new CreateClientSocket().run("john");
 
 		String receiverId = mainClientSocket.getUUIDfromClientsListByUsername("john");
+		String emitterId = mainClientSocket.getUUIDfromClientsListByUsername(mainClientUsername);
+
 		System.out.println("receiverID: " + receiverId);
+		System.out.println("emitterID: " + emitterId);
 		String message = "This is a private message";
 		String messageToSend = "/msg " + receiverId + " " + message;
 		mainClientSocket.sendMessageToServer(messageToSend);
 		TimeUnit.SECONDS.sleep(2);
 		System.out.println("mainClientSocket.lastMessageReceivedFromServer");
 		System.out.println(mainClientSocket.lastMessageReceivedFromServer);
-		boolean containsMessage = mainClientSocket.lastMessageReceivedFromServer.contains(message);
-		boolean containsReceiverId = mainClientSocket.lastMessageReceivedFromServer.contains(receiverId);
+
+		boolean emitterContainsMessage = mainClientSocket.lastMessageReceivedFromServer.contains(message);
+		boolean emittercontainsReceiverId = mainClientSocket.lastMessageReceivedFromServer.contains(receiverId);
+
+		System.out.println("johnSocket.lastMessageReceivedFromServer");
+		System.out.println(johnSocket.lastMessageReceivedFromServer);
+
+		boolean receiverContainsMessage = johnSocket.lastMessageReceivedFromServer.contains(message);
+		boolean receiverContainsEmitterId = johnSocket.lastMessageReceivedFromServer.contains(emitterId);
+
+		boolean didSend = (emitterContainsMessage && emittercontainsReceiverId);
+		boolean didReceive = (receiverContainsMessage && receiverContainsEmitterId);
+
+
 		johnSocket.disconnect();
 		mainClientSocket.disconnect();
 		TimeUnit.SECONDS.sleep(3);
-		assertTrue((containsMessage && containsReceiverId));
+
+		// If the server replies with the message sent and the receiver ID that means the
+		assertTrue(didSend);
+		assertTrue(didReceive);
+
 	}
-	
+
+	/**
+	 * Tests the coordinator ability to send clients's information to each client.
+	 *
+	 * @throws Exception
+	 */
 	@Test
 	void testSendingClientsOnlineStatusToOtherClients() throws Exception {
 
@@ -199,7 +243,10 @@ class ClientTest {
 		assertTrue(everyoneUpdatedClientsList);
 		
 	}
-	
+
+	/**
+	 * Tests the behaviour of replacing the coordinator, once the previous becomes unavailable
+	 */
 	@Test
 	void testCoordinatorSubstitution() throws Exception {
 		System.out.println(":::::::::::::::::::::::::::::::::::::::");
