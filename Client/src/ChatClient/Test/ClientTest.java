@@ -201,8 +201,6 @@ class ClientTest {
 		mainClientSocket.runClient();
 		mainClientSocket.sendMessageToServer(username);
 		johnSocket.disconnect();
-		System.out.println("IS CONNECTED" + mainClientSocket.isConnected());
-		
 		
 		assertTrue(isAllowed);
 		
