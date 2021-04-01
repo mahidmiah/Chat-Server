@@ -196,7 +196,7 @@ class ClientTest {
 		johnSocket.sendMessageToServer("/list");
 		TimeUnit.SECONDS.sleep(3);
 		boolean isAllowed = johnSocket.lastMessageReceivedFromServer.contains("Clients online and their info");
-		
+		System.out.println("[testCoordinatorSubstitution] john's last message: " + johnSocket.lastMessageReceivedFromServer);
 		
 		mainClientSocket.runClient();
 		mainClientSocket.sendMessageToServer(username);
