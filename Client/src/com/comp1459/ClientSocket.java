@@ -8,11 +8,14 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.comp1549.ServerWorker;
 
 
 public class ClientSocket {
@@ -39,6 +42,10 @@ public class ClientSocket {
 	public Socket socket;
     public BufferedReader ServerBufferedInputReader;
     public PrintWriter serverOutputWriter;
+    
+    public void onServerMessageReceived(String message) {
+		
+	}
     
 	public void onServerRequestedTermination() {
 		
@@ -101,7 +108,24 @@ public class ClientSocket {
     
     public void disconnect() throws IOException {
     	this.sendMessageToServer("/quit");
-    	socket.close();
+    	Thread thread = new Thread(){
+            @Override
+            public void run(){
+            	try {
+            		TimeUnit.SECONDS.sleep(30);
+					if (socket.isClosed() == false) {
+						socket.close();
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            }
+        };
+        thread.start();
     }
     
     public boolean isConnected() {
@@ -126,6 +150,7 @@ public class ClientSocket {
         try {
             while ( (line = ServerBufferedInputReader.readLine()) != null){
             	lastMessageReceivedFromServer = line;
+            	onServerMessageReceived(line);
                 if (line.contains("Clients online and their info")) {
                     String[] tokens = line.split("#");
                     String formattedLine = "";
@@ -139,7 +164,43 @@ public class ClientSocket {
                     	
                     }
                     this.onServerNormalMessageReceived(formattedLine);
-                } else if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)){
+                } else if (line.contains("has disconnected")) {
+                	// Remove Disconnected user from the clientsList
+                	
+                	for (Iterator<String> clientsListIT = clientsList.iterator(); clientsListIT.hasNext(); ) {
+                	    String clientInfo = clientsListIT.next();
+                	    
+                	    // Expected input: [john (e82cfa84-76a0-4118-8c33-86c1a39aebdc)] has disconnected
+                	    // We use Regex to capture the username and UUID;
+                	    Pattern p = Pattern.compile("\\[([a-zA-Z0-9!@#$&()\\\\\\-`\\.\\+\\,\\/\\\"]+)\\s\\(([a-zA-Z0-9\\\\-]+)\\)\\]");
+                	    Matcher m = p.matcher(line);
+                	    
+                	    if (m.find()) {
+                	    	String disconnectedUsername = m.group(1);
+                	    	String disconnectedUUID = m.group(2);
+                	    	if (clientInfo.contains(disconnectedUUID)) {
+                	    		clientsListIT.remove();
+                    	    }
+                	    }
+                	    
+                	}
+                	this.onServerNormalMessageReceived(line);
+                	
+                } else if (line.contains("has joined the server")) {
+                	// Add connected user to the clientsList
+                	
+                	
+                	// Expected input: [john (e82cfa84-76a0-4118-8c33-86c1a39aebdc)] has joined the server
+            	    // We use Regex to capture the username and UUID;
+                	Pattern p = Pattern.compile("\\[([a-zA-Z0-9!@#$&()\\\\\\-`\\.\\+\\,\\/\\\"]+)\\s\\(([a-zA-Z0-9\\\\-]+)\\)\\]");
+            	    Matcher m = p.matcher(line);
+            	    if (m.find()) {
+            	    	String newElement = "UUID: " + m.group(2) + ", Username: " + m.group(1);
+            	    	// Add to the clients List with the format: "UUID: <uuid>, Username: <username>"
+            	    	clientsList.add(newElement);
+            	    }
+                	this.onServerNormalMessageReceived(line);
+                } else if(Arrays.equals(line.getBytes(), closedBytes1) || Arrays.equals(line.getBytes(), closedBytes2)) {
                 	// If the received message in bytes is equivalent to closedBytes1 or 2, it will run the code below and close.
                     this.onServerRequestedTermination();
                 } else {
